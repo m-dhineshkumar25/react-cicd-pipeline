@@ -33,12 +33,14 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t react-cicd-app .'
-            }
-        }
-
+        stage('Build & Push Docker Image') {
+    steps {
+        sh '''
+        docker build -t dhineshkumar375/react-cicd-app:v1 .
+        docker push dhineshkumar375/react-cicd-app:v1
+        '''
+    }
+}
         stage('Deploy to Development') {
             steps {
                 sh '''

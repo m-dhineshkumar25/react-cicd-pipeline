@@ -14,7 +14,11 @@ pipeline {
                 sh 'npm ci'
             }
         }
-
+        stage('Code Quality Check') {
+            steps {
+                sh 'npm run lint || true'
+            }
+        }
         stage('Build') {
             steps {
                 sh 'npm run build'

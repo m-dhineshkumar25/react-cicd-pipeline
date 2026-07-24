@@ -2,38 +2,52 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Verify Node') {
-            steps {
-                sh 'node -v'
-                sh 'npm -v'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh 'npm ci'
             }
         }
 
-        stage('Build React App') {
+        stage('Build') {
             steps {
                 sh 'npm run build'
             }
         }
-    }
 
-    post {
-        success {
-            echo 'Build Successful'
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t react-cicd-app .'
+            }
         }
-        failure {
-            echo 'Build Failed'
+
+        stage('Deploy to Development') {
+            steps {
+                sh '''
+                docker stop reactapp || true
+                docker rm reactapp || true
+                docker run -d --name reactapp -p 3000:3000 react-cicd-app
+                '''
+            }
         }
+
+        stage('Approval for Production') {
+            steps {
+                input "Deploy to Production?"
+            }
+        }
+
+        stage('Production Deployment') {
+            steps {
+                echo "Production Deployment Successful"
+            }
+        }
+
     }
 }

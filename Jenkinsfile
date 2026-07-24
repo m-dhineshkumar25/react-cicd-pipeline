@@ -64,13 +64,27 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            echo "Pipeline completed successfully."
-        }
-
-        failure {
-            echo "Pipeline failed. Rollback can be implemented here."
-        }
+stage('Health Check') {
+    steps {
+        sh '''
+        sleep 10
+        curl -f http://localhost:3000
+        '''
     }
+}
+    post {
+
+    success {
+        echo "Pipeline completed successfully."
+    }
+
+    failure {
+        echo "Deployment failed. Rolling back..."
+
+        sh '''
+        docker stop reactapp || true
+        docker rm reactapp || true
+        '''
+    }
+}
 }

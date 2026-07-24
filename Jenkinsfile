@@ -34,19 +34,20 @@ pipeline {
         }
 
         stage('Build & Push Docker Image') {
-    steps {
-        sh '''
-        docker build -t dhineshkumar375/react-cicd-app:v1 .
-        docker push dhineshkumar375/react-cicd-app:v1
-        '''
-    }
-}
+            steps {
+                sh '''
+                docker build -t dhineshkumar375/react-cicd-app:v1 .
+                docker push dhineshkumar375/react-cicd-app:v1
+                '''
+            }
+        }
+
         stage('Deploy to Development') {
             steps {
                 sh '''
                 docker stop reactapp || true
                 docker rm reactapp || true
-                docker run -d --name reactapp -p 3000:3000 react-cicd-app
+                docker run -d --name reactapp -p 3000:3000 dhineshkumar375/react-cicd-app:v1
                 '''
             }
         }
@@ -62,29 +63,31 @@ pipeline {
                 echo "Production Deployment Successful"
             }
         }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                sleep 10
+                curl -f http://localhost:3000
+                '''
+            }
+        }
+
     }
 
-stage('Health Check') {
-    steps {
-        sh '''
-        sleep 10
-        curl -f http://localhost:3000
-        '''
-    }
-}
     post {
 
-    success {
-        echo "Pipeline completed successfully."
-    }
+        success {
+            echo "Pipeline completed successfully."
+        }
 
-    failure {
-        echo "Deployment failed. Rolling back..."
+        failure {
+            echo "Deployment failed. Rolling back..."
 
-        sh '''
-        docker stop reactapp || true
-        docker rm reactapp || true
-        '''
+            sh '''
+            docker stop reactapp || true
+            docker rm reactapp || true
+            '''
+        }
     }
-}
 }
